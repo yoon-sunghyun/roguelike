@@ -142,10 +142,13 @@ void _showGUI(HANDLE hCSB, PGUI pGUI)
 {
 	if (hCSB != INVALID_HANDLE_VALUE && pGUI != NULL)
 	{
-		SMALL_RECT	winSize	= { 0, 0, 2 * (pGUI->dim.X - 1), (pGUI->dim.Y) };
-		COORD		dim		= { (2 * pGUI->dim.X), (pGUI->dim.Y + 0) };
-		SetConsoleWindowInfo(hCSB, TRUE, &winSize);
-		SetConsoleScreenBufferSize(hCSB, dim);
+		// set console window & screen buffer size
+		// winDim MUST BE SMALLER THAN bufDim, otherwise SetConsoleWindowInfo() function fails
+		// https://docs.microsoft.com/en-us/windows/console/setconsolewindowinfo
+		SMALL_RECT	winDim = { 0, 0, (2 * pGUI->dim.X), (pGUI->dim.Y) };
+		COORD		bufDim = { (2 * pGUI->dim.X) + 1, (pGUI->dim.Y) + 1 };
+		SetConsoleWindowInfo(hCSB, TRUE, &winDim);
+		SetConsoleScreenBufferSize(hCSB, bufDim);
 
 		SetConsoleTextAttribute(hCSB, _FC);
 		WriteConsoleW(hCSB, pGUI->gBuf, pGUI->dim.X * pGUI->dim.Y, NULL, NULL);

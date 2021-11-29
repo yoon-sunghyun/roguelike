@@ -74,10 +74,12 @@ void _showEnv(HANDLE hCSB, PENV pEnv)
 	if (hCSB != INVALID_HANDLE_VALUE && pEnv != NULL)
 	{
 		// set console window & screen buffer size
-		SMALL_RECT	winSize	= { 0, 0, 2 * (pEnv->dim.X - 1), (pEnv->dim.Y) };
-		COORD		dim		= { (2 * pEnv->dim.X), (pEnv->dim.Y) };
-		SetConsoleWindowInfo(hCSB, TRUE, &winSize);
-		SetConsoleScreenBufferSize(hCSB, dim);
+		// winDim MUST BE SMALLER THAN bufDim, otherwise SetConsoleWindowInfo() function fails
+		// https://docs.microsoft.com/en-us/windows/console/setconsolewindowinfo
+		SMALL_RECT	winDim = { 0, 0, (2 * pEnv->dim.X), (pEnv->dim.Y) };
+		COORD		bufDim = { (2 * pEnv->dim.X) + 1, (pEnv->dim.Y) + 1 };
+		SetConsoleWindowInfo(hCSB, TRUE, &winDim);
+		SetConsoleScreenBufferSize(hCSB, bufDim);
 
 		SetConsoleTextAttribute(hCSB, pEnv->attr);
 		WriteConsoleW(hCSB, pEnv->gBuf, pEnv->dim.X * pEnv->dim.Y, NULL, NULL);

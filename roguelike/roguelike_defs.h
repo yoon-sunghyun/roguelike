@@ -166,6 +166,7 @@ typedef struct _ROGUELIKE {
 	PENV	curEnv;				// current ENV struct
 
 	PENT	pPC;
+	PGUI	pGUI;
 } RL, * PRL, ** PPRL;
 
 //---------------------------------------------------------------------------

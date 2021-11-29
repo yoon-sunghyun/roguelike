@@ -11,19 +11,20 @@ PRL _makeRL()
 
 	if ((result = (PRL)calloc(1, sizeof(RL))) != NULL)
 	{
+		srand((UINT)time(NULL));
+
 		USHORT	iter	= ENV_MIN_ITER;
 		COORD	dim		= { 0, 0 };
-
-		srand((UINT)time(NULL));
 		for (USHORT i = 0; i < 3; i++, iter++)
 		{
 			dim = _getValidParams(iter);
 			_pushListNode(&(result->lEnv), _makeEnv(dim, _FC, iter));
 		}
-
 		result->curIdx	= 0;
 		result->curEnv	= _getListNodeI(&(result->lEnv), result->curIdx)->pVal;
+
 		result->pPC		= _makeEnt(result->curEnv->posI, ICON_PLAYER, _FG | _FI);
+		result->pGUI	= _makeGUI();
 	}
 	return result;
 }
@@ -37,6 +38,7 @@ void _freeRL(PRL pRL)
 		_freeEnv(temp->pVal);
 	_freeListNode(pRL->lEnv.head);
 	_freeEnt(pRL->pPC);
+	_freeGUI(pRL->pGUI);
 }
 //--------------------------------------------------------------------------------
 /*
