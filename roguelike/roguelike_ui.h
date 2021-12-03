@@ -6,7 +6,7 @@
 void	_handlePC(PRL);
 
 PGUI	_makeGUI();
-void	_fillGUI(PGUI, PRL);
+void	_fillGUI(PRL);
 void	_showGUI(HANDLE, PGUI);
 void	_freeGUI(PGUI);
 

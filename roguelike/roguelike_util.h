@@ -18,6 +18,6 @@ void	_dropListNode(PLIST, PVOID);
 PLNODE	_getListNodeI(PLIST, USHORT);
 void	_freeListNode(PLNODE);
 
-BOOL	_posInRect(COORD, SRECT);
+BOOL	_coordInSrect(COORD, SRECT);
 
 #endif

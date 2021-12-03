@@ -153,8 +153,10 @@ typedef struct _ENVIRONMENT {
 
 typedef struct _GUI {
 	COORD	dim;				// dimension of GUI
-	SRECT	rEnv;				// pos/dim of ENV window
-	SRECT	rEnt;				// pos/dim of ENT window
+	SRECT	rEnv;				// pos/dim of ENV part of GUI
+	SRECT	rEnt;				// pos/dim of ENT part of GUI
+
+	WORD	attr;
 	PWCHAR	gBuf;				// buffer for graphics
 } GUI, * PGUI, ** PPGUI;
 

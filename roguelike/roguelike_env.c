@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------------------------
 /*
-	makes ENVIRONS struct - must be freed by _freeEnvirons() function
+	makes ENVIRONS struct - must be freed by _freeEnv() function
 	@param	dim		: dimension of ENV
 	@param	iter	: number of recursive call(s)
 */
@@ -25,13 +25,13 @@ PENV _makeEnv(COORD dim, WORD attr, SHORT iter)
 			result->lRoom.head	= NULL;
 			result->lRoom.tail	= NULL;
 			// list for item data
-			result->lRoom.len	= 0;
-			result->lRoom.head	= NULL;
-			result->lRoom.tail	= NULL;
+			result->lItem.len	= 0;
+			result->lItem.head	= NULL;
+			result->lItem.tail	= NULL;
 			// list for entity data
-			result->lRoom.len	= 0;
-			result->lRoom.head	= NULL;
-			result->lRoom.tail	= NULL;
+			result->lEnti.len	= 0;
+			result->lEnti.head	= NULL;
+			result->lEnti.tail	= NULL;
 
 			// https://stackoverflow.com/a/2151141
 			result->gBuf		= (PWCHAR)calloc(result->dim.X * result->dim.Y, sizeof(WCHAR));

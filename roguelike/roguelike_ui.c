@@ -29,22 +29,14 @@ void _handlePC(PRL pRL)
 				// collision with entrance detected
 				PLNODE temp = _getListNodeI(&(pRL->lEnv), --(pRL->curIdx));
 				if (temp != NULL)
-				{
-					pRL->curEnv = temp->pVal;
-					pRL->pPC->pos.X = pRL->curEnv->posO.X;
-					pRL->pPC->pos.Y = pRL->curEnv->posO.Y;
-				}
+					pRL->pPC->pos = (pRL->curEnv = temp->pVal)->posO;
 			}
 			else if (pVal == (PVOID)ICON_ENV_O && pRL->curIdx + 1 < pRL->lEnv.len)
 			{
 				// collision with exit detected
 				PLNODE temp = _getListNodeI(&(pRL->lEnv), ++(pRL->curIdx));
 				if (temp != NULL)
-				{
-					pRL->curEnv = temp->pVal;
-					pRL->pPC->pos.X = pRL->curEnv->posI.X;
-					pRL->pPC->pos.Y = pRL->curEnv->posI.Y;
-				}
+					pRL->pPC->pos = (pRL->curEnv = temp->pVal)->posI;
 			}
 			break;
 		}
@@ -70,7 +62,7 @@ void _handlePC(PRL pRL)
 }
 //--------------------------------------------------------------------------------
 /*
-	make GUI struct
+	makes GUI struct
 */
 PGUI _makeGUI()
 {
@@ -91,6 +83,7 @@ PGUI _makeGUI()
 		result->rEnt.B	= result->rEnt.T + GUI_ENV_W;
 		result->rEnt.R	= result->rEnt.L + GUI_ENT_W;
 
+		result->attr	= _FW;
 		result->gBuf	= (PWCHAR)calloc(result->dim.X * result->dim.Y, sizeof(WCHAR));
 
 		if (result->gBuf != NULL)
@@ -110,7 +103,7 @@ PGUI _makeGUI()
 		}
 		else
 		{
-			free(result);
+			_freeGUI(result);
 			return NULL;
 		}
 	}
@@ -119,17 +112,79 @@ PGUI _makeGUI()
 //--------------------------------------------------------------------------------
 /*
 	fills GUI with ENV and ENT data
-	@param	pGUI	: pointer to GUI struct
 	@param	pRL		: pointer to ROGUELIKE struct
 */
-void _fillGUI(PGUI pGUI, PRL pRL)
+void _fillGUI(PRL pRL)
 {
+	SRECT win = { 0, 0, 0, 0 };
+	win.T = pRL->pPC->pos.Y - (GUI_ENV_W / 2);
+	win.L = pRL->pPC->pos.X - (GUI_ENV_W / 2);
+	win.B = win.T + GUI_ENV_W;
+	win.R = win.L + GUI_ENV_W;
+	
+	COORD d = { 0, 0 };
+	if (win.T < 0)
+		d.Y = 0 - win.T;
+	if (win.L < 0)
+		d.X = 0 - win.L;
+	if (win.B > pRL->curEnv->dim.Y)
+		d.Y = pRL->curEnv->dim.Y - win.B;
+	if (win.R > (pRL->curEnv->dim.X - 1))	// '-1' is for newline
+		d.X = pRL->curEnv->dim.X - win.R - 1;
+	
+	win.T += d.Y;
+	win.L += d.X;
+	win.B += d.Y;
+	win.R += d.X;
+
 	for (USHORT y = 0; y < GUI_ENV_W; y++)
 	{
 		wmemcpy(
-			&(pGUI->gBuf[pGUI->dim.X * (y + 1) + 1]),
-			&(pRL->curEnv->gBuf[pRL->curEnv->dim.X * (y) + 0]),
+			&(pRL->pGUI->gBuf[pRL->pGUI->dim.X * (pRL->pGUI->rEnt.T + y) + (pRL->pGUI->rEnv.L)]),
+			&(pRL->curEnv->gBuf[pRL->curEnv->dim.X * (win.T + y) + (win.L)]),
 			GUI_ENV_W);
+	}
+
+	PITEM	pI	= NULL;
+	PENT	pE	= NULL;
+	COORD	pos	= { 0, 0 };
+
+	// GUI color
+	pRL->pGUI->attr = pRL->curEnv->attr;
+	// items
+	for (PLNODE tmp = pRL->curEnv->lItem.head; tmp != NULL; tmp = tmp->next)
+	{
+		if ((pI = tmp->pVal) != NULL && _coordInSrect(pI->pos, win))
+		{
+			pos.Y = (pRL->pGUI->rEnv.T + (pI->pos.Y - win.T));
+			pos.X = (pRL->pGUI->rEnv.L + (pI->pos.X - win.L));
+			pRL->pGUI->gBuf[pRL->pGUI->dim.X * (pos.Y) + (pos.X)] = ICON_CHEST;
+		}
+	}
+	// entities
+	for (PLNODE tmp = pRL->curEnv->lEnti.head; tmp != NULL; tmp = tmp->next)
+	{
+		if ((pE = tmp->pVal) != NULL && _coordInSrect(pE->pos, win))
+		{
+			pos.Y = (pRL->pGUI->rEnv.T + (pE->pos.Y - win.T));
+			pos.X = (pRL->pGUI->rEnv.L + (pE->pos.X - win.L));
+			pRL->pGUI->gBuf[pRL->pGUI->dim.X * (pos.Y) + (pos.X)] = ICON_ENEMY;
+		}
+	}
+	// player character
+	pos.Y = (pRL->pGUI->rEnv.T + (pRL->pPC->pos.Y - win.T));
+	pos.X = (pRL->pGUI->rEnv.L + (pRL->pPC->pos.X - win.L));
+	pRL->pGUI->gBuf[pRL->pGUI->dim.X * (pos.Y) + (pos.X)] = pRL->pPC->rep.icon;
+	// player character inventory
+	for (USHORT i = 0; i < 10; i++)
+	{
+		pos.Y = pRL->pGUI->rEnt.T + 1 + i;
+		pos.X = pRL->pGUI->rEnt.L + 1;
+
+		if (pRL->pPC->items[i] != NULL)
+			pRL->pGUI->gBuf[pRL->pGUI->dim.X * (pos.Y) + (pos.X)] = ICON_CHEST;
+		else
+			pRL->pGUI->gBuf[pRL->pGUI->dim.X * (pos.Y) + (pos.X)] = ICON_HALLWAY;
 	}
 }
 //--------------------------------------------------------------------------------
@@ -150,8 +205,9 @@ void _showGUI(HANDLE hCSB, PGUI pGUI)
 		SetConsoleWindowInfo(hCSB, TRUE, &winDim);
 		SetConsoleScreenBufferSize(hCSB, bufDim);
 
-		SetConsoleTextAttribute(hCSB, _FC);
+		SetConsoleTextAttribute(hCSB, pGUI->attr);
 		WriteConsoleW(hCSB, pGUI->gBuf, pGUI->dim.X * pGUI->dim.Y, NULL, NULL);
+		_setCursorPos(hCSB, 0, 0);
 	}
 }
 //--------------------------------------------------------------------------------

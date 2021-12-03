@@ -212,9 +212,9 @@ void _freeListNode(PLNODE pNode)
 	@param	rect	: rectangle
 	@return TRUE if pos is inside rect, FALSE if otherwise
 */
-BOOL _posInRect(COORD pos, SRECT rect)
+BOOL _coordInSrect(COORD pos, SRECT rect)
 {
-	if ((rect.L <= pos.X && pos.X <= rect.R) && (rect.T <= pos.Y && pos.Y <= rect.B))
+	if ((rect.L <= pos.X && pos.X < rect.R) && (rect.T <= pos.Y && pos.Y < rect.B))
 	{
 		return TRUE;
 	}
